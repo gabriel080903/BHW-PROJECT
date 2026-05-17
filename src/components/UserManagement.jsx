@@ -40,14 +40,20 @@ export default function UserManagement({ notify }) {
   const [newPassword, setNewPassword] = useState('')
   const [formError, setFormError]   = useState('')
 
+  const [pendingUsers, setPendingUsers] = useState([])
+
   const fetchUsers = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
       if (search) params.set('search', search)
       if (filterRole) params.set('role', filterRole)
-      const data = await api.get(`/api/users?${params}`)
+      const [data, pendingData] = await Promise.all([
+        api.get(`/api/users?${params}`),
+        api.get('/api/users/pending').catch(() => ({ users: [] }))
+      ])
       setUsers(data.users || [])
+      setPendingUsers(pendingData.users || [])
     } catch (err) {
       notify('Failed to load users: ' + err.message, 'error')
     } finally {
@@ -123,6 +129,23 @@ export default function UserManagement({ notify }) {
     } catch (err) { notify(err.message, 'error') }
   }
 
+  const handleApproveGoogle = async (userId, role) => {
+    try {
+      await api.patch(`/api/users/${userId}/approve`, { role })
+      notify(`User approved as ${role}!`)
+      fetchUsers()
+    } catch (err) { notify(err.message || 'Approval failed', 'error') }
+  }
+
+  const handleRejectGoogle = async (userId) => {
+    if (!window.confirm('Reject and deactivate this user?')) return
+    try {
+      await api.patch(`/api/users/${userId}/deactivate`)
+      notify('User rejected and deactivated.')
+      fetchUsers()
+    } catch (err) { notify(err.message, 'error') }
+  }
+
   const inpCls = 'w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition-all'
 
   return (
@@ -152,6 +175,49 @@ export default function UserManagement({ notify }) {
           {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
       </div>
+
+      {/* Pending Google Users */}
+      {pendingUsers.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">⏳</span>
+            <h2 className="font-black text-amber-800 text-sm">Pending Google Sign-in Approvals ({pendingUsers.length})</h2>
+          </div>
+          {pendingUsers.map(u => (
+            <div key={u._id} className="bg-white rounded-xl border border-amber-200 p-4 flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                {u.profilePicture
+                  ? <img src={u.profilePicture} alt="" className="w-10 h-10 rounded-full border-2 border-amber-300"/>
+                  : <div className="w-10 h-10 rounded-full bg-amber-200 flex items-center justify-center font-black text-amber-800">{u.username?.[0]?.toUpperCase()}</div>
+                }
+                <div className="min-w-0">
+                  <p className="font-black text-slate-800 text-sm">{u.displayName || u.username}</p>
+                  <p className="text-xs text-slate-400 truncate">{u.email}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <select onChange={e => e.target.dataset.role = e.target.value}
+                  id={`role-${u._id}`}
+                  className="px-3 py-2 rounded-lg border border-amber-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-400">
+                  <option value="BHW">BHW Staff</option>
+                  <option value="Parent/Guardian">Parent/Guardian</option>
+                  <option value="Admin">Admin</option>
+                </select>
+                <button onClick={() => {
+                  const sel = document.getElementById(`role-${u._id}`)
+                  handleApproveGoogle(u._id, sel?.value || 'Parent/Guardian')
+                }} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-black transition-all">
+                  ✅ Approve
+                </button>
+                <button onClick={() => handleRejectGoogle(u._id)}
+                  className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-xs font-black transition-all">
+                  ❌ Reject
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Users Table */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
