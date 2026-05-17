@@ -105,12 +105,22 @@ export default function Login({ onLogin }) {
       })
 
       // Backend returns { token, user } or sets httpOnly cookie
+      // Decode role from JWT token if user object not returned
+      let role = data.user?.role || 'BHW'
+      if (data.token && !data.user?.role) {
+        try {
+          const payload = JSON.parse(atob(data.token.split('.')[1]))
+          role = payload.role || 'BHW'
+        } catch { /* use default */ }
+      }
+
       const session = {
-        id:       data.user?.id || data.id,
-        username: data.user?.username || form.username.trim().toLowerCase(),
-        role:     data.user?.role || 'BHW',
-        email:    data.user?.email || '',
-        loginAt:  new Date().toISOString(),
+        id:          data.user?.id || data.id,
+        username:    data.user?.username || form.username.trim().toLowerCase(),
+        displayName: data.user?.displayName || data.user?.username || form.username.trim().toLowerCase(),
+        role,
+        email:       data.user?.email || '',
+        loginAt:     new Date().toISOString(),
       }
       localStorage.setItem('bhw_user', JSON.stringify(session))
       onLogin(session)
