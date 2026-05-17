@@ -23,6 +23,7 @@ function VaxModal({ resident, onClose, onUpdate }) {
   const removeVax = i => setVaxList(p => p.filter((_, idx) => idx !== i))
 
   const save = () => {
+    if (!onUpdate) return
     onUpdate(resident.id, vaxList)
     onClose()
   }
@@ -153,6 +154,7 @@ export default function VaxTracker({ residents, onUpdate }) {
                     <div className="min-w-0">
                       <p className="font-bold text-slate-700 text-sm truncate">{r.firstName} {r.lastName}</p>
                       <p className="text-[10px] text-slate-400">{count} vaccine{count !== 1 ? 's' : ''} recorded</p>
+                      {count === 0 && <p className="text-[10px] text-amber-500 font-bold">⚠ No vaccines yet</p>}
                     </div>
                   </div>
                   <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">

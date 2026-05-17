@@ -251,10 +251,10 @@ export default function NutritionEntry({ residents, records, onSave, onUpdate, o
   const FILTER_STATUSES = ['All','Normal','Underweight','Overweight','Obese','Stunted','Wasted']
 
   return (
-    <div className="grid xl:grid-cols-12 gap-5">
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
       {/* Left: Form */}
       <div className="xl:col-span-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden sticky top-20">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden xl:sticky xl:top-20">
           <div className={`px-5 py-4 ${editRecord ? 'bg-gradient-to-r from-blue-600 to-indigo-600' : 'bg-gradient-to-r from-emerald-600 to-teal-600'}`}>
             <h2 className="text-white font-extrabold text-base">
               {editRecord ? '✏️ Edit Record' : '🥗 Nutrition Entry'}
