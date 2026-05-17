@@ -19,14 +19,14 @@ const load = (key, fallback = []) => {
 }
 
 const ALL_TABS = [
-  { id: 'dashboard', label: 'Dashboard', icon: '📊', roles: ['Admin','BHW'] },
-  { id: 'residents', label: 'Residents', icon: '👥', roles: ['Admin','BHW'] },
-  { id: 'management', label: 'Management', icon: '📋', roles: ['Admin'] },
-  { id: 'nutrition', label: 'Nutrition', icon: '🥗', roles: ['Admin','BHW'] },
-  { id: 'vaccines',  label: 'Vaccines',  icon: '💉', roles: ['Admin','BHW'] },
-  { id: 'inventory', label: 'Inventory', icon: '📦', roles: ['Admin','BHW'] },
-  { id: 'report',    label: 'Report',    icon: '📋', roles: ['Admin','BHW'] },
-  { id: 'users',     label: 'Users',     icon: '👤', roles: ['Admin'] },
+  { id: 'dashboard',  label: 'Dashboard',  short: 'Dashboard', icon: '📊', roles: ['Admin','BHW'] },
+  { id: 'residents',  label: 'Residents',  short: 'Residents', icon: '👥', roles: ['Admin','BHW'] },
+  { id: 'management', label: 'Management', short: 'Approvals', icon: '✅', roles: ['Admin','BHW'] },
+  { id: 'nutrition',  label: 'Nutrition',  short: 'Nutrition', icon: '🥗', roles: ['Admin','BHW'] },
+  { id: 'vaccines',   label: 'Vaccines',   short: 'Vaccines',  icon: '💉', roles: ['Admin','BHW'] },
+  { id: 'inventory',  label: 'Inventory',  short: 'Inventory', icon: '📦', roles: ['Admin','BHW'] },
+  { id: 'report',     label: 'Report',     short: 'Report',    icon: '📋', roles: ['Admin','BHW'] },
+  { id: 'users',      label: 'Users',      short: 'Users',     icon: '👤', roles: ['Admin'] },
 ]
 
 export function BHWLogo({ size = 38 }) {
@@ -986,9 +986,9 @@ export default function App() {
                   : 0
                 return (
                   <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                    className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wide whitespace-nowrap transition-all flex-shrink-0 ${activeTab===tab.id?'bg-white/15 text-white':'text-emerald-400 hover:text-white hover:bg-white/10'}`}>
-                    <span>{tab.icon}</span>
-                    <span>{tab.label}</span>
+                    className={`relative flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide whitespace-nowrap transition-all flex-shrink-0 ${activeTab===tab.id?'bg-white/15 text-white':'text-emerald-400 hover:text-white hover:bg-white/10'}`}>
+                    <span className="text-sm">{tab.icon}</span>
+                    <span>{tab.short || tab.label}</span>
                     {pendingCount > 0 && (
                       <span className="ml-1.5 px-1.5 py-0.5 bg-red-500 text-white text-[8px] font-black rounded-full">
                         {pendingCount}
@@ -1005,8 +1005,8 @@ export default function App() {
                 <svg className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
-                <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search…"
-                  className="w-32 focus:w-44 pl-6 pr-6 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white placeholder-white/30 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all duration-200"/>
+                <input value={searchTerm} onChange={e => { setSearchTerm(e.target.value); if(e.target.value && activeTab!=='residents') setActiveTab('residents') }} placeholder="Search residents…"
+                  className="w-36 focus:w-48 pl-6 pr-6 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white placeholder-white/30 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all duration-200"/>
                 {searchTerm && <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-xs">✕</button>}
               </div>
 
@@ -1126,6 +1126,9 @@ export default function App() {
                 onReject={rejectResidentRequest}
                 onDelete={deleteResident}
                 notify={notify}
+                userRole={user?.role}
+                records={records}
+                onApproveRecord={approveRecord}
               />
             )}
             {activeTab==='nutrition' && (
