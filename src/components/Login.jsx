@@ -75,17 +75,23 @@ export default function Login({ onLogin }) {
             return
           }
         } catch (err) {
+          const msg = err.message || ''
           // Check if pending approval
-          if (err.message === 'pending_approval') {
+          if (msg === 'pending_approval') {
             setPendingApproval({ email: profile.email, displayName: profile.name })
             return
           }
-          if (err.message === 'account_deactivated') {
+          if (msg === 'account_deactivated') {
             setError('Your account has been deactivated. Contact the admin.')
             return
           }
-          // If backend endpoint fails, show pending for new Google users
-          setPendingApproval({ email: profile.email, displayName: profile.name })
+          // Network error — don't auto-redirect to pending
+          if (msg.includes('fetch') || msg.includes('network') || msg.includes('Failed')) {
+            setError('Cannot connect to server. Please try again.')
+            return
+          }
+          // Unknown error from backend — show it
+          setError(msg || 'Google sign-in failed. Please try again.')
           return
         }
       } catch {

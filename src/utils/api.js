@@ -4,7 +4,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 async function request(path, options = {}) {
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
-    credentials: 'include',          // required for JWT cookies
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(options.headers || {}),
@@ -12,7 +12,11 @@ async function request(path, options = {}) {
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }))
-    throw new Error(err.message || 'Request failed')
+    // Throw error with the exact message from backend (e.g. 'pending_approval')
+    const error = new Error(err.message || 'Request failed')
+    error.status = res.status
+    error.data = err
+    throw error
   }
   return res.json()
 }
@@ -24,8 +28,3 @@ export const api = {
   patch:  (path, body)   => request(path, { method: 'PATCH',  body: JSON.stringify(body) }),
   delete: (path)         => request(path, { method: 'DELETE' }),
 }
-
-// Usage examples:
-// import { api } from '../utils/api'
-// const residents = await api.get('/api/residents')
-// const user      = await api.post('/api/auth/login', { username, password })
